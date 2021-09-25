@@ -2,17 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const massive = require('massive');
+const postCtrl = require('./controllers/posts');
+const { register, login, getUser, logout } = require('./controllers/user');
 
 
 const { CONNECTION_STRING, SERVER_PORT, SESSION_SECRET } = process.env;
-
-const userCtrl = require('./controllers/user');
-const postCtrl = require('./controllers/posts');
-
-
 const app = express();
-
-app.use(express.json());
 
 massive({
     connectionString: CONNECTION_STRING,
@@ -21,23 +16,25 @@ massive({
     app.set('db', db);
     console.log('db connected');
 }).catch((error) => {
-    console.log(error, 'there was a db error');
+    console.log(`there was a db: ${error}`);
 });
 
-app.use(
-    session({
+app.use(session({
         resave: true,
         saveUninitialized: false,
         secret: SESSION_SECRET,
-        cookie: { maxAge: 1000 * 60 * 60 },
-    })
-);
+        cookie: { 
+            maxAge: 1000 * 60 * 60 
+        }
+    }));
+    
+    app.use(express.json());
 
 //Auth Endpoints
-app.post('/api/auth/register', userCtrl.register);
-app.post('/api/auth/login', userCtrl.login);
-app.get('/api/auth/me', userCtrl.getUser);
-app.post('/api/auth/logout', userCtrl.logout);
+app.post('/api/auth/register', register);
+app.post('/api/auth/login', login);
+app.get('/api/auth/me', getUser);
+app.post('/api/auth/logout', logout);
 
 //Post Endpoints
 app.get('/api/posts', postCtrl.readPosts);

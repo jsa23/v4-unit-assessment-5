@@ -1,13 +1,12 @@
 import React, { Component } from 'react';
+import { Link, withRouter } from 'react-router-dom';
 import axios from 'axios';
+import { connect } from 'react-redux';
+import { updateUser, logout } from '../../redux/reducer'; 
 import homeLogo from './../../assets/home_logo.png';
 import newLogo from './../../assets/new_logo.png';
 import logoutLogo from './../../assets/shut_down.png';
 import './Nav.css';
-import { Link, withRouter } from 'react-router-dom';
-import connect from 'react-redux';
-import { updateUser } from '../../redux/reducer'; 
-import { logout } from '../../redux/reducer';
 
 class Nav extends Component {
   constructor(props) {
@@ -21,38 +20,55 @@ class Nav extends Component {
     this.getUser()
   }
 
+  componentDidUpdate(prevProps){
+    const isForm = window.location.hash.includes('form');
+    if(isForm !== prevProps.isForm){
+      this.props.setIsForm(isForm);
+    }
+  }
+
   getUser() {
     axios.get('/api/auth/me')
-      .then(res => this.props.updateUser)
-    .catch((err) => console.log(err))
+      .then(({ data }) => this.props.updateUser(data))
   }
   
   logout() {
     axios.post('/api/auth/logout')
-      .then(res => this.props.logout)
-    .catch((err) => console.log(err))
+      .then(this.props.logout)
   }
   
   render() {
       return this.props.location.pathname !== '/' &&
         <div className='nav'>
           <div className='nav-profile-container'>
-            {/* <div className='nav-profile-pic'>({this.props.style}backgroundImage=url(`${REDUX_STATE_PIC}`)</div> */}
-            <p>username</p>
+          <div 
+              className='nav-profile-pic'
+              style={{ backgroundImage: `url(${this.props.profilePic})` }}
+            />
+            <p>{this.props.username}</p>
           </div>
           <div className='nav-links'>
-            <Link to='./Dash' img className='nav-img' src={homeLogo} alt='home' />
-            <Link to='./Form' img className='nav-img' src={newLogo} alt='new post' />
+            <Link to='/dash'>
+              <img className='nav-img' src={homeLogo} alt='home' />
+            </Link>
+            <Link to='/form'>
+              <img className='nav-img' src={newLogo} alt='new post' />
+            </Link>
           </div>
-          <Link to='Auth' onClick={(logoutLogo) => this.logout()} img className='nav-img logout' src={logoutLogo} alt='logout' />
+          <Link to='/' onClick={this.logout}>
+            <img className='nav-img logout' src={logoutLogo} alt='logout' />
+          </Link>
         </div>
   }
 }
 
-const mapStateToProps = state => state
+const mapStateToProps = (state) => {
+  return state;
+}
 
-export default 
-<withRouter>
-  connect(mapStateToProps {updateUser, logout}(Component))
-    <Nav />
-</withRouter>;
+const mapDispatchToProps = {
+  logout,
+  updateUser
+};
+
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Nav));

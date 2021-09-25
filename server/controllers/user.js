@@ -1,39 +1,64 @@
 const bcrypt = require('bcryptjs');
 
-module.exports = {
-    register: async(req, res) => {
-        const { username, password } = req.body;
-        const db = req.app.get('db');
-        const result = await db.getUser([username]);
-        const exisitingUser = result[0];
-        if (exisitingUser) {
-            return res.status(409).send('Someone already has this Username.');
-        }
-        const salt = bcrypt.genSaltSync(10);
-        const hash = bcrypt.hashSync(password, salt);
-        const registeredUser = await db.registerUser([username, hash]);;;;;;
-        const user = registeredUser[0];
-        req.session.user = { username: user.username, id: user.id };;;;;
-        return res.status(201).send(req.session.user);
-    },
+const register = (req, res) => {
+    const { username, password: pw } = req.body;
+    const db = req.app.get('db');
 
-    login: async(req, res) => {
-        const { username, password } = req.body;
-        const foundUser = await req.app.get('db').getUser([username]);
-        const user = foundUser[0];
-        if (!user) {
-            return res.status(401).send('Username not found. Please register as a new user before logging in.');
+    db.user.find_user_by_username(username)
+    .then((users) => {
+        if(users.length){
+            res.status(500).send("Username is take, please select another username or login")
+        } else {
+            const password = bcrypt.hashSync(pw);
+            const profile_pic = `https://robohash.org/${username}.png`;
+            db.user.create_user(username, password, profile_pic)
+            .then(userArr => {
+                req.session.user = userArr[0];
+                res.status(200).send(userArr[0]);
+            })
         }
-        const isAuthenticated = bcrypt.compareSync(password, user.hash);
-        if (!isAuthenticated) {
-            return res.status(403).send('Incorrect password.');
+    }).catch((err) => res.status(500).send(`Error creating user: ${err}`))
+}
+
+const login = async (req, res) => {
+    const { username, password } = req.body;
+    const db = req.app.get('db');
+
+    try{
+        const userArr = await db.user.find_user_by_username(username);
+        const user = userArr[0];
+        if(user){
+            const credentialMatch = bcrypt.compareSync(password, user.password);
+            if( credentialMatch ){
+                req.session.user = user;
+                res.status(200).send(user);
+            } else {
+                res.sendStatus(403);
+            }
         }
-        req.session.user = { username: user.username, id: user.id };
-    },
-    getUser: (req, res) => {
-    },
-    logout: (req, res) => {
-        req.session.destroy();
-        return res.sendStatus(200)
+    } catch (e) {
+        res.sendStatus(403);
     }
-};
+
+}
+
+const getUser = (req, res) => {
+    const user = req.session.user;
+    if(user){
+        res.status(200).send(user);
+    } else {
+        res.sendStatus(404);
+    }
+}
+
+const logout = (req, res) => {
+    req.session.destroy();
+    res.sendStatus(200);
+}
+
+module.exports = {
+    register,
+    login,
+    getUser,
+    logout
+}

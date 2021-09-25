@@ -26,18 +26,20 @@ class Auth extends Component {
   login() {
     axios.post('/api/auth/login', this.state)
       .then(res => {
-        this.setState({updateUser })
+        this.props.history.push('/dash')
+        this.props.updateUser(res.data)
       })
       .catch(err => {
         console.log(err)
         this.setState({errorMsg: 'Incorrect username or password!'})
       })
-  }
-
-  register() {
-    axios.post('/api/auth/register', this.state)
+    }
+    
+    register() {
+      axios.post('/api/auth/register', this.state)
       .then(res => {
-        this.setState({updateUser, })
+        this.props.history.push('/dash')
+        this.props.updateUser(res.data)
       })
       .catch(err => {
         console.log(err)
@@ -78,5 +80,4 @@ class Auth extends Component {
   }
 }
 
-export default Auth
-connect(null, { updateUser})
+export default connect(null, { updateUser })(Auth);

@@ -1,32 +1,40 @@
 const initialState = {
     username: '',
     profile_picture: ''
-}
+};
 
 const UPDATE_USER = 'UPDATE_USER';
 const LOGOUT_USER = 'LOGOUT_USER';
 
-export function updateUser(user){
-    const action = {
-        type: UPDATE_USER,
-        // payload: { username: username, profile_picture: profile_picture },
+export const updateUser = (user) => ({
+    type: UPDATE_USER,
+    payload: {
+            username: user.username,
+            profilePic: user.profile_pic
     }
-    return action
-};
+});
 
-export function logout(user){
-    const action = {
-        type: LOGOUT_USER,
+export const logout = (user) => {
+    return {
+        type: LOGOUT_USER
     }
-    return action
 }
 
-export default function reducer(state = initialState, action) {
-    switch (action.initialState) {
+export default function reducer(state = initialState, { type, payload }){
+    switch (type) {
         case UPDATE_USER:
-            // return { username, profile_picture };
+            return {
+                ...state,
+                username: payload.username,
+                profilePic: payload.profilePic,
+            }
             case LOGOUT_USER:
-                return {}
+                return {
+                    ...state,
+                    username: '',
+                    profilePic: '',
+    }
+        default:
+            return state;
     }
 }
-

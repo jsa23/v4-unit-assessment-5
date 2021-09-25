@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
-import Routes from './routes'
 import Nav from './Components/Nav/Nav';
+import routes from './routes';
 
 function App() {
+  const [isForm, setIsForm ] =useState(false);
+
   return (
-    <div className='App'>
-      <Routes />
-      <Nav />
+    <div className={isForm ? 'App app-form' : 'App'}>
+      <Nav setIsForm={setIsForm} isForm={isForm}/>
+      {routes}
     </div>
   )
 };
